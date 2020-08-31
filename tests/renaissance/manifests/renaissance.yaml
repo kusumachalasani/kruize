@@ -1,0 +1,53 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: renaissance-sample
+  labels:
+    app: renaissance-app
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name:renaissance-deployment
+        app: renaissance-deployment
+        org.kubernetes.io/name: "renaissance"
+        version: v1
+    spec:
+      volumes:
+      - name: test-volume
+        hostPath:
+          path: "/root/icp/jLogs"
+          type: ""
+      containers:
+      - name: renaissance
+        image: kusumach/renaissance:0.10
+        imagePullPolicy: Always
+        env:
+        - name: "JVM_OPTIONS"
+          value: "-Xms12g -Xmx12g -Xverbosegclog:/opt/jLogs/verbosegc.xml"
+        - name: "BENCHMARK"
+          value: "all"
+        - name: "TIMELIMIT"
+          value: "660"
+        command: [/run-renaissance.sh]
+        resources:
+          requests:
+            memory: 114688M
+            cpu: 2
+          limits:
+            memory: 114688M
+            cpu: 3
+        volumeMounts:
+          - name: "test-volume"
+            mountPath: "/output"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: renaissance-service
+  labels:
+    app: renaissance-app
+spec:
+  selector:
+    name: renaissance-deployment
